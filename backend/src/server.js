@@ -64,7 +64,7 @@ const app = express();
 app.use(cors({
   origin: [
     'http://localhost:3000',
-    'https://job-tracker-app.vercel.app',  // We'll update this with your actual Vercel URL
+    'https://job-tracker-app-amber.vercel.app',  // We'll update this with your actual Vercel URL
     process.env.FRONTEND_URL
   ],
   credentials: true
