@@ -1,7 +1,10 @@
-
 // import React, { useState, useEffect, createContext, useContext } from 'react';
 // import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 // import './App.css';
+
+// //github change 
+// const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 
 // // API utility functions
 // const api = {
@@ -110,6 +113,15 @@
 //     toggleComplete: (id) => api.request(`/alerts/${id}/complete`, {
 //       method: 'PATCH'
 //     })
+//   },
+
+//   // NEW: Profile API
+//   profile: {
+//     get: () => api.request('/profile'),
+//     update: (name, email) => api.request('/profile', {
+//       method: 'PUT',
+//       body: { name, email }
+//     })
 //   }
 // };
 
@@ -157,8 +169,14 @@
 //     setUser(null);
 //   };
 
+//   // NEW: Add updateUser function
+//   const updateUser = (updatedUser) => {
+//     localStorage.setItem('user', JSON.stringify(updatedUser));
+//     setUser(updatedUser);
+//   };
+
 //   return (
-//     <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+//     <AuthContext.Provider value={{ user, login, register, logout, loading, updateUser }}>
 //       {children}
 //     </AuthContext.Provider>
 //   );
@@ -268,11 +286,13 @@
 //     }
 //   };
 
+//   // UPDATED: Add Profile to menu items
 //   const menuItems = [
 //     { path: '/dashboard', icon: '📊', label: 'Dashboard' },
 //     { path: '/applications', icon: '💼', label: 'My Applications' },
 //     { path: '/notes', icon: '📝', label: 'Notes & Experience' },
 //     { path: '/alerts', icon: '🔔', label: 'Alerts', badge: alertCount },
+//     { path: '/profile', icon: '👤', label: 'Profile' }, // NEW LINE
 //   ];
 
 //   // Close mobile menu when clicking a link
@@ -2031,7 +2051,7 @@
 //   );
 // };
 
-
+// // NEW: Profile Page Component
 // const ProfilePage = () => {
 //   const { user, updateUser } = useAuth();
 //   const [formData, setFormData] = useState({
@@ -2105,8 +2125,8 @@
 //           </div>
 
 //           <div className="profile-info-box">
-//             <p><strong>User ID:</strong> {user?._id}</p>
-//             <p><strong>Account Created:</strong> {new Date(user?.createdAt || Date.now()).toLocaleDateString()}</p>
+//             {/* <p><strong>User ID:</strong> {user?._id}</p> */}
+//             <p><strong>Account Created On:</strong> {new Date(user?.createdAt || Date.now()).toLocaleDateString()}</p>
 //           </div>
 
 //           <button
@@ -2121,10 +2141,6 @@
 //     </div>
 //   );
 // };
-
-
-
-
 
 // // Main Layout with Mobile Menu State
 // const MainLayout = () => {
@@ -2161,6 +2177,7 @@
 //             <Route path="/applications" element={<ApplicationsPage />} />
 //             <Route path="/notes" element={<NotesPage />} />
 //             <Route path="/alerts" element={<AlertsPage />} />
+//             <Route path="/profile" element={<ProfilePage />} /> {/* NEW ROUTE */}
 //           </Routes>
 //         </div>
 //       </div>
@@ -2211,31 +2228,17 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import './App.css';
 
+//github change - API URL configuration for deployment
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+
 // API utility functions
 const api = {
-  baseURL: 'http://localhost:5000/api',
+  baseURL: `${API_URL}/api`,
   
   async request(endpoint, options = {}) {
     const token = localStorage.getItem('token');
@@ -2931,7 +2934,7 @@ const JobForm = ({ onJobAdded, editJob, onCancel }) => {
               <p className="existing-file">
                 Current resume: 
                 <a 
-                  href={`http://localhost:5000${editJob.resume}`} 
+                  href={`${API_URL}${editJob.resume}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="resume-link"
@@ -3011,7 +3014,7 @@ const JobCard = ({ job, onEdit, onDelete, index, onDragStart, onDragOver, onDrop
           </small>
           {job.resume && (
             <a 
-              href={`http://localhost:5000${job.resume}`}
+              href={`${API_URL}${job.resume}`}
               target="_blank"
               rel="noopener noreferrer"
               className="resume-link-compact"

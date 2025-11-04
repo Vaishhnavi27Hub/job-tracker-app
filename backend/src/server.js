@@ -58,7 +58,17 @@ require('dotenv').config();
 const app = express();
 
 // Middleware
-app.use(cors());
+// app.use(cors()); // github change 
+const cors = require('cors');
+
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://job-tracker-app.vercel.app',  // We'll update this with your actual Vercel URL
+    process.env.FRONTEND_URL
+  ],
+  credentials: true
+}));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
