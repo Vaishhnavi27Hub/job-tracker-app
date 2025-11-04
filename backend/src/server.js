@@ -59,7 +59,7 @@ const app = express();
 
 // Middleware
 // app.use(cors()); // github change 
-const cors = require('cors');
+// const cors = require('cors');
 
 app.use(cors({
   origin: [
