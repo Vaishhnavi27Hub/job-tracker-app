@@ -224,19 +224,26 @@
 
 
 
+const SibApiV3Sdk = require('@getbrevo/brevo');
 
-
-
-const { Resend } = require('resend');
-const resend = new Resend(process.env.RESEND_API_KEY);
+const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+apiInstance.setApiKey(
+  SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
+  process.env.BREVO_API_KEY
+);
 
 const sendAlertEmail = async (userEmail, alert) => {
   try {
-    const { data, error } = await resend.emails.send({
-      from: 'Job Tracker <onboarding@resend.dev>', // Free test domain
-      to: userEmail,
+    console.log(`📧 Attempting to send email to: ${userEmail}`);
+    
+    const sendSmtpEmail = {
+      sender: { 
+        email: 'vaishnavikadiyala27@gmail.com', 
+        name: 'Job Tracker Alerts' 
+      },
+      to: [{ email: userEmail }],
       subject: `🔔 Job Alert: ${alert.title}`,
-      html: `
+      htmlContent: `
         <!DOCTYPE html>
         <html>
         <head>
@@ -249,6 +256,8 @@ const sendAlertEmail = async (userEmail, alert) => {
             .priority-high { border-left-color: #ef4444; }
             .priority-medium { border-left-color: #f59e0b; }
             .priority-low { border-left-color: #10b981; }
+            .button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; }
+            .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
           </style>
         </head>
         <body>
@@ -261,26 +270,31 @@ const sendAlertEmail = async (userEmail, alert) => {
                 <h2>${alert.title}</h2>
                 <p><strong>Type:</strong> ${alert.type || 'Reminder'}</p>
                 <p><strong>Due:</strong> ${new Date(alert.alertDate).toLocaleString()}</p>
-                <p><strong>Priority:</strong> ${alert.priority || 'medium'}</p>
+                <p><strong>Priority:</strong> <span style="text-transform: uppercase;">${alert.priority || 'medium'}</span></p>
                 ${alert.description ? `<p><strong>Details:</strong> ${alert.description}</p>` : ''}
+                ${alert.jobApplication ? `<p><strong>Related Job:</strong> ${alert.jobApplication.company} - ${alert.jobApplication.position}</p>` : ''}
               </div>
-              <p>This is a reminder for your upcoming task!</p>
+              <p>This is a reminder for your upcoming task. Don't forget to take action!</p>
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/alerts" class="button">View All Alerts</a>
+            </div>
+            <div class="footer">
+              <p>You're receiving this because you enabled email notifications</p>
+              <p>Job Application Tracker - Stay organized!</p>
             </div>
           </div>
         </body>
         </html>
       `
-    });
+    };
 
-    if (error) {
-      console.error('❌ Resend Error:', error);
-      return { success: false, error };
-    }
-
-    console.log(`✅ Email sent to ${userEmail}`, data);
-    return { success: true, data };
+    const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log(`✅ Email sent successfully to ${userEmail}`, result);
+    return { success: true, data: result };
   } catch (error) {
-    console.error('❌ Resend Exception:', error);
+    console.error('❌ Brevo Error:', error);
+    if (error.response) {
+      console.error('Error details:', error.response.body);
+    }
     return { success: false, error: error.message };
   }
 };
@@ -290,31 +304,59 @@ const sendDailyDigest = async (userEmail, alerts) => {
     const alertsList = alerts.map(alert => `
       <div style="background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #667eea; border-radius: 5px;">
         <h3>${alert.title}</h3>
+        <p><strong>Type:</strong> ${alert.type || 'Reminder'}</p>
         <p><strong>Due:</strong> ${new Date(alert.alertDate).toLocaleString()}</p>
+        ${alert.description ? `<p>${alert.description}</p>` : ''}
       </div>
     `).join('');
 
-    const { data, error } = await resend.emails.send({
-      from: 'Job Tracker <onboarding@resend.dev>',
-      to: userEmail,
-      subject: `📋 Daily Alerts (${alerts.length})`,
-      html: `
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1>📋 Your Daily Alerts</h1>
-          ${alertsList}
-        </div>
+    const sendSmtpEmail = {
+      sender: { 
+        email: 'vaishnavikadiyala27@gmail.com', 
+        name: 'Job Tracker' 
+      },
+      to: [{ email: userEmail }],
+      subject: `📋 Your Daily Job Alerts Summary (${alerts.length} alerts)`,
+      htmlContent: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+            .button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; }
+            .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>📋 Daily Alerts Summary</h1>
+              <p>You have ${alerts.length} alert(s) for today</p>
+            </div>
+            <div class="content">
+              ${alertsList}
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/alerts" class="button">Manage All Alerts</a>
+            </div>
+            <div class="footer">
+              <p>Job Application Tracker - Stay organized, land your dream job!</p>
+            </div>
+          </div>
+        </body>
+        </html>
       `
-    });
+    };
 
-    if (error) {
-      console.error('❌ Resend Error:', error);
-      return { success: false, error };
-    }
-
-    console.log(`✅ Digest sent to ${userEmail}`);
+    const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log(`✅ Daily digest sent to ${userEmail}`);
     return { success: true };
   } catch (error) {
-    console.error('❌ Resend Exception:', error);
+    console.error('❌ Brevo Error:', error);
+    if (error.response) {
+      console.error('Error details:', error.response.body);
+    }
     return { success: false, error: error.message };
   }
 };
