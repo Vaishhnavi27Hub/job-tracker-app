@@ -59,9 +59,6 @@
 
 
 
-
-
-
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
@@ -84,10 +81,8 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const user = await User.create({ name, email, password: hashedPassword });
+    // ✅ REMOVED MANUAL HASHING - Let the model's pre-save hook handle it
+    const user = await User.create({ name, email, password });
     console.log('✅ User created successfully:', email);
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
@@ -120,8 +115,8 @@ const loginUser = async (req, res) => {
     console.log('🔍 Stored password hash:', user.password.substring(0, 20) + '...');
     console.log('🔍 Password length:', password.length);
 
-    // Compare passwords
-    const isMatch = await bcrypt.compare(password, user.password);
+    // ✅ Use the model's comparePassword method
+    const isMatch = await user.comparePassword(password);
     console.log('🔍 Password match result:', isMatch);
 
     if (!isMatch) {
@@ -143,14 +138,3 @@ const loginUser = async (req, res) => {
 };
 
 module.exports = { registerUser, loginUser };
-
-
-
-
-
-
-
-
-
-
-
