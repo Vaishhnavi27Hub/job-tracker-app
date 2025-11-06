@@ -2,13 +2,13 @@
 // import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 // import './App.css';
 
-// //github change 
+// //github change - API URL configuration for deployment
 // const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 
 // // API utility functions
 // const api = {
-//   baseURL: 'http://localhost:5000/api',
+//   baseURL: `${API_URL}/api`,
   
 //   async request(endpoint, options = {}) {
 //     const token = localStorage.getItem('token');
@@ -704,7 +704,7 @@
 //               <p className="existing-file">
 //                 Current resume: 
 //                 <a 
-//                   href={`http://localhost:5000${editJob.resume}`} 
+//                   href={`${API_URL}${editJob.resume}`} 
 //                   target="_blank" 
 //                   rel="noopener noreferrer"
 //                   className="resume-link"
@@ -784,7 +784,7 @@
 //           </small>
 //           {job.resume && (
 //             <a 
-//               href={`http://localhost:5000${job.resume}`}
+//               href={`${API_URL}${job.resume}`}
 //               target="_blank"
 //               rel="noopener noreferrer"
 //               className="resume-link-compact"
@@ -2228,6 +2228,39 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import './App.css';
@@ -3457,7 +3490,7 @@ const ApplicationsPage = () => {
   );
 };
 
-// Notes Page Component
+// UPDATED: Notes Page Component with Collapsible Feature
 const NotesPage = () => {
   const [notes, setNotes] = useState([]);
   const [jobs, setJobs] = useState([]);
@@ -3466,6 +3499,7 @@ const NotesPage = () => {
   const [editNote, setEditNote] = useState(null);
   const [selectedJob, setSelectedJob] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [expandedNotes, setExpandedNotes] = useState(new Set()); // NEW: Track expanded notes
 
   useEffect(() => {
     fetchNotes();
@@ -3501,6 +3535,19 @@ const NotesPage = () => {
         console.error('Error deleting note:', error);
       }
     }
+  };
+
+  // NEW: Toggle note expansion
+  const toggleNoteExpansion = (noteId) => {
+    setExpandedNotes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(noteId)) {
+        newSet.delete(noteId);
+      } else {
+        newSet.add(noteId);
+      }
+      return newSet;
+    });
   };
 
   const getInterviewTypeIcon = (type) => {
@@ -3587,73 +3634,90 @@ const NotesPage = () => {
             <p>No notes found. Start adding interview experiences!</p>
           </div>
         ) : (
-          filteredNotes.map(note => (
-            <div key={note._id} className="note-card">
-              <div className="note-header">
-                <div className="note-title-section">
-                  <span className="note-icon">{getInterviewTypeIcon(note.interviewType)}</span>
-                  <div>
-                    <h3 className="note-title">{note.company}</h3>
-                    <p className="note-subtitle">{note.position} • {note.interviewType} • {note.round}</p>
+          filteredNotes.map(note => {
+            const isExpanded = expandedNotes.has(note._id);
+            
+            return (
+              <div key={note._id} className="note-card">
+                <div className="note-header">
+                  <div className="note-title-section">
+                    <span className="note-icon">{getInterviewTypeIcon(note.interviewType)}</span>
+                    <div>
+                      <h3 className="note-title">{note.company}</h3>
+                      <p className="note-subtitle">{note.position} • {note.interviewType} • {note.round}</p>
+                    </div>
+                  </div>
+                  <div className="note-actions">
+                    {note.rating && (
+                      <div className="note-rating">
+                        {'⭐'.repeat(note.rating)}
+                      </div>
+                    )}
+                    <button onClick={() => setEditNote(note)} className="edit-button-compact">Edit</button>
+                    <button onClick={() => handleDelete(note._id)} className="delete-button-compact">Delete</button>
                   </div>
                 </div>
-                <div className="note-actions">
-                  {note.rating && (
-                    <div className="note-rating">
-                      {'⭐'.repeat(note.rating)}
+
+                {note.interviewDate && (
+                  <div className="note-date">
+                    📅 {new Date(note.interviewDate).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </div>
+                )}
+
+                {/* NEW: Collapsible Toggle Button */}
+                <button 
+                  className="note-toggle-btn"
+                  onClick={() => toggleNoteExpansion(note._id)}
+                >
+                  📝 Interview Notes {isExpanded ? '▲' : '▼'}
+                </button>
+
+                {/* NEW: Collapsible Content */}
+                {isExpanded && (
+                  <div className="note-expanded-content">
+                    <div className="note-content">
+                      <h4>INTERVIEW NOTES:</h4>
+                      <p>{note.content}</p>
                     </div>
-                  )}
-                  <button onClick={() => setEditNote(note)} className="edit-button-compact">Edit</button>
-                  <button onClick={() => handleDelete(note._id)} className="delete-button-compact">Delete</button>
+
+                    {note.questionsAsked && note.questionsAsked.length > 0 && (
+                      <div className="note-section">
+                        <h4>QUESTIONS ASKED:</h4>
+                        <ul className="questions-list">
+                          {note.questionsAsked.map((q, idx) => (
+                            <li key={idx}>❓ {q}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {note.learnings && (
+                      <div className="note-section">
+                        <h4>✅ WHAT WENT WELL:</h4>
+                        <p>{note.learnings}</p>
+                      </div>
+                    )}
+
+                    {note.improvements && (
+                      <div className="note-section">
+                        <h4>📝 AREAS FOR IMPROVEMENT:</h4>
+                        <p>{note.improvements}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="note-footer">
+                  <small>Created {new Date(note.createdAt).toLocaleDateString()}</small>
                 </div>
               </div>
-
-              {note.interviewDate && (
-                <div className="note-date">
-                  📅 {new Date(note.interviewDate).toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </div>
-              )}
-
-              <div className="note-content">
-                <h4>Interview Notes:</h4>
-                <p>{note.content}</p>
-              </div>
-
-              {note.questionsAsked && note.questionsAsked.length > 0 && (
-                <div className="note-section">
-                  <h4>Questions Asked:</h4>
-                  <ul className="questions-list">
-                    {note.questionsAsked.map((q, idx) => (
-                      <li key={idx}>{q}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {note.learnings && (
-                <div className="note-section">
-                  <h4>✅ What Went Well:</h4>
-                  <p>{note.learnings}</p>
-                </div>
-              )}
-
-              {note.improvements && (
-                <div className="note-section">
-                  <h4>📈 Areas for Improvement:</h4>
-                  <p>{note.improvements}</p>
-                </div>
-              )}
-
-              <div className="note-footer">
-                <small>Created {new Date(note.createdAt).toLocaleDateString()}</small>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -4355,7 +4419,6 @@ const ProfilePage = () => {
           </div>
 
           <div className="profile-info-box">
-            {/* <p><strong>User ID:</strong> {user?._id}</p> */}
             <p><strong>Account Created On:</strong> {new Date(user?.createdAt || Date.now()).toLocaleDateString()}</p>
           </div>
 
@@ -4407,7 +4470,7 @@ const MainLayout = () => {
             <Route path="/applications" element={<ApplicationsPage />} />
             <Route path="/notes" element={<NotesPage />} />
             <Route path="/alerts" element={<AlertsPage />} />
-            <Route path="/profile" element={<ProfilePage />} /> {/* NEW ROUTE */}
+            <Route path="/profile" element={<ProfilePage />} />
           </Routes>
         </div>
       </div>

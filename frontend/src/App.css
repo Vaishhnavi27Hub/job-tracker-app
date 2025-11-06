@@ -2009,3 +2009,54 @@ body {
 .profile-card-simple .auth-form-container {
   width: 100%;
 }
+
+
+/* Collapsible Note Toggle Button */
+.note-toggle-btn {
+  width: 100%;
+  padding: 12px 16px;
+  margin: 12px 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.note-toggle-btn:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Expanded Content */
+.note-expanded-content {
+  animation: slideDown 0.3s ease-out;
+  overflow: hidden;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .note-toggle-btn {
+    font-size: 13px;
+    padding: 10px 14px;
+  }
+}
